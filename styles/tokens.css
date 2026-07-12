@@ -1,0 +1,35 @@
+@layer base {
+  :root {
+    /* Base Backgrounds & Surfaces */
+    --background: #060608;
+    --surface: #111116;
+    --surface-hover: #1A1A22;
+    --surface-border: #22222E;
+    
+    /* Text */
+    --text-primary: #FFFFFF;
+    --text-secondary: #A1A1AA;
+    --text-muted: #52525B;
+
+    /* Primary Accent (Arena Violet) */
+    --accent-violet: #8B5CF6;
+    --accent-violet-glow: rgba(139, 92, 246, 0.5);
+
+    /* Secondary Accent (Winner Gold) */
+    --accent-gold: #F59E0B;
+    --accent-gold-glow: rgba(245, 158, 11, 0.5);
+
+    /* Status Colors */
+    --status-success: #10B981;
+    --status-error: #EF4444;
+
+    /* Layout & Spacing */
+    --container-max-width: 1200px;
+    --header-height: 80px;
+
+    /* Fonts (Fallbacks) */
+    --font-heading: 'Clash Display', sans-serif;
+    --font-body: 'General Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+}

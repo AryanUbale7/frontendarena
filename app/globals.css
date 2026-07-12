@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Base Backgrounds & Surfaces */
+    --background: #060608;
+    --surface: #111116;
+    --surface-hover: #1A1A22;
+    --surface-border: #22222E;
+    
+    /* Text */
+    --text-primary: #FFFFFF;
+    --text-secondary: #A1A1AA;
+    --text-muted: #52525B;
+
+    /* Primary Accent (Arena Violet) */
+    --accent-violet: #8B5CF6;
+    --accent-violet-glow: rgba(139, 92, 246, 0.5);
+
+    /* Secondary Accent (Winner Gold) */
+    --accent-gold: #F59E0B;
+    --accent-gold-glow: rgba(245, 158, 11, 0.5);
+
+    /* Status Colors */
+    --status-success: #10B981;
+    --status-error: #EF4444;
+
+    /* Layout & Spacing */
+    --container-max-width: 1200px;
+    --header-height: 80px;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-border: var(--surface-border);
+  
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+
+  --color-accent-violet: var(--accent-violet);
+  --color-accent-violet-glow: var(--accent-violet-glow);
+  --color-accent-gold: var(--accent-gold);
+  --color-accent-gold-glow: var(--accent-gold-glow);
+
+  --color-status-success: var(--status-success);
+  --color-status-error: var(--status-error);
+
+  /* Fonts mapped to our layout.tsx variables */
+  --font-heading: var(--font-clash-display), sans-serif;
+  --font-body: var(--font-general-sans), sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+  --font-cinzel: var(--font-cinzel), serif;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  /* The arena is dark mode only */
+  color-scheme: dark;
+}
+
+/* Custom Selection */
+::selection {
+  background-color: var(--accent-violet);
+  color: #fff;
+}
