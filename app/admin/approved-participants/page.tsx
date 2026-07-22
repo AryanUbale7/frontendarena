@@ -51,9 +51,17 @@ export default function ApprovedParticipantsPage() {
       getApprovedParticipantsList(page, 50, search)
     ])
 
+    if (listRes.error) {
+      if (listRes.error.includes("approved_participants") || listRes.error.includes("schema cache") || listRes.error.includes("does not exist")) {
+        setUploadError("Database table 'approved_participants' does not exist yet in Supabase. Please execute 0008_approved_participants.sql in your Supabase SQL Editor.")
+      } else {
+        setUploadError(listRes.error)
+      }
+    }
+
     setStats(statsRes)
-    setParticipants(listRes.data as ApprovedParticipant[])
-    setTotalCount(listRes.count)
+    setParticipants((listRes.data || []) as ApprovedParticipant[])
+    setTotalCount(listRes.count || 0)
     setLoading(false)
   }, [page, search])
 

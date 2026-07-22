@@ -492,9 +492,9 @@ export async function uploadApprovedParticipants(emails: string[], mode: 'replac
     }
   }
 
-  // Batch insert emails in chunks of 500
-  const chunkSize = 500
-  let insertedCount = 0
+  // Batch insert emails in chunks of 200
+  const chunkSize = 200
+  let lastError: string | null = null
 
   for (let i = 0; i < cleanEmails.length; i += chunkSize) {
     const chunk = cleanEmails.slice(i, i + chunkSize).map(email => ({
@@ -502,14 +502,24 @@ export async function uploadApprovedParticipants(emails: string[], mode: 'replac
       registered: false
     }))
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("approved_participants")
-      .upsert(chunk, { onConflict: "email", ignoreDuplicates: true })
-      .select()
+      .upsert(chunk, { onConflict: "email" })
 
-    if (!error && data) {
-      insertedCount += data.length
+    if (error) {
+      console.error("Error upserting approved_participants chunk:", error.message)
+      lastError = error.message
     }
+  }
+
+  if (lastError && cleanEmails.length > 0) {
+    // If table doesn't exist, provide a helpful error message
+    if (lastError.includes("approved_participants") || lastError.includes("schema cache") || lastError.includes("does not exist")) {
+      return { 
+        error: "Database table 'approved_participants' does not exist yet. Please run the SQL migration (0008_approved_participants.sql) in your Supabase SQL Editor." 
+      }
+    }
+    return { error: `Database insert error: ${lastError}` }
   }
 
   // Cross-reference existing registered users in the users table to mark them as registered = true
