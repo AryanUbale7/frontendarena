@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
 import { Search, Filter, Mail, Ban, Loader2, Download } from "lucide-react"
 import { getAllParticipants } from "@/actions/admin"
+import { AdminParticipant } from "@/lib/types"
 
 export default function ParticipantsPage() {
-  const [data, setData] = React.useState<any[]>([])
+  const [data, setData] = React.useState<AdminParticipant[]>([])
   const [loading, setLoading] = React.useState(true)
   const [errorMsg, setErrorMsg] = React.useState("")
 

@@ -68,3 +68,17 @@ export async function getUserProfile() {
     joinedAt: user.created_at
   }
 }
+
+export async function updateProfile(fullName: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const { error } = await supabase
+    .from("users")
+    .update({ full_name: fullName })
+    .eq("id", user.id)
+
+  if (error) return { error: error.message }
+  return { success: true }
+}

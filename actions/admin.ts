@@ -5,9 +5,12 @@ import { cookies } from "next/headers"
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
 import { z } from "zod"
 
+import crypto from "crypto"
+
 async function verifyAdminAccess() {
   const cookieStore = await cookies()
-  if (cookieStore.get("admin_auth")?.value !== "true") {
+  const expectedHmac = crypto.createHmac('sha256', process.env.ADMIN_PASSKEY || 'fallback-secret').update('admin_authenticated').digest('hex')
+  if (cookieStore.get("admin_auth")?.value !== expectedHmac) {
     throw new Error("Unauthorized admin access")
   }
 }
@@ -81,15 +84,18 @@ export async function getAllSubmissions() {
     return { error: error.message }
   }
 
-  const mapped = data.map((sub: any) => ({
-    id: sub.id,
-    user: sub.users?.team_name || sub.users?.full_name || "Unknown",
-    track: "Arena", // Placeholder since track isn't implemented in submissions table yet
-    status: sub.status === 'evaluated' ? 'Reviewed' : sub.status === 'submitted' ? 'Pending' : 'Draft',
-    submitted: sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : "Draft",
-    repo: sub.github_url || "",
-    demo: sub.demo_url || ""
-  }))
+  const mapped = data.map((sub) => {
+    const users = sub.users as unknown as { team_name?: string; full_name?: string } | null
+    return {
+      id: sub.id,
+      user: users?.team_name || users?.full_name || "Unknown",
+      track: "Arena", // Placeholder since track isn't implemented in submissions table yet
+      status: sub.status === 'evaluated' ? 'Reviewed' : sub.status === 'submitted' ? 'Pending' : 'Draft',
+      submitted: sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : "Draft",
+      repo: sub.github_url || "",
+      demo: sub.demo_url || ""
+    }
+  })
 
   return { data: mapped }
 }
@@ -123,11 +129,12 @@ export async function getSubmissionById(id: string) {
     return { error: error.message }
   }
 
+  const users = data.users as unknown as { team_name?: string; full_name?: string; email?: string } | null
   return {
     data: {
       ...data,
-      participant_name: (data as any).users?.team_name || (data as any).users?.full_name || "Unknown",
-      participant_email: (data as any).users?.email || "N/A",
+      participant_name: users?.team_name || users?.full_name || "Unknown",
+      participant_email: users?.email || "N/A",
     }
   }
 }
@@ -143,7 +150,7 @@ export async function getAllParticipants() {
     return { error: error.message }
   }
 
-  const mapped = data.map((user: any) => ({
+  const mapped = data.map((user: { id: string; team_name: string | null; full_name: string | null; email: string | null; created_at: string; role: string }) => ({
     id: user.id.split('-')[0].toUpperCase(),
     name: user.team_name || user.full_name || "Unknown",
     email: user.email || "No email stored",
@@ -192,8 +199,8 @@ export async function updateEventContent(formData: {
 }) {
   try {
     await verifyAdminAccess()
-  } catch (e: any) {
-    return { error: e.message }
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : 'Unknown error' }
   }
 
   const ip = await getClientIp()
@@ -245,8 +252,8 @@ export async function updateEventContent(formData: {
 export async function uploadEventFile(formData: FormData) {
   try {
     await verifyAdminAccess()
-  } catch (e: any) {
-    return { error: e.message }
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : 'Unknown error' }
   }
 
   const ip = await getClientIp()
@@ -296,7 +303,7 @@ export async function uploadEventFile(formData: FormData) {
     return { error: "No active event found to link file." }
   }
 
-  const updateFields: any = {}
+  const updateFields: Record<string, string | null> = {}
   if (fileType === "problem") {
     updateFields.problem_statement_url = fileUrl
     updateFields.problem_statement_filename = file.name
@@ -324,8 +331,8 @@ export async function uploadEventFile(formData: FormData) {
 export async function deleteEventFile(fileType: "problem" | "resource") {
   try {
     await verifyAdminAccess()
-  } catch (e: any) {
-    return { error: e.message }
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : 'Unknown error' }
   }
 
   const ip = await getClientIp()
@@ -344,7 +351,7 @@ export async function deleteEventFile(fileType: "problem" | "resource") {
     return { error: "No active event found." }
   }
 
-  const updateFields: any = {}
+  const updateFields: Record<string, string | null> = {}
   if (fileType === "problem") {
     updateFields.problem_statement_url = null
     updateFields.problem_statement_filename = null

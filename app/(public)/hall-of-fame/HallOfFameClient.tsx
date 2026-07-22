@@ -3,9 +3,10 @@
 import * as React from "react"
 import { motion } from "framer-motion"
 import { WinnerCard } from "@/components/hall-of-fame/WinnerCard"
+import { HallOfFameWinner } from "@/lib/types"
 
 interface HallOfFameClientProps {
-  initialData: any[]
+  initialData: HallOfFameWinner[]
 }
 
 export function HallOfFameClient({ initialData }: HallOfFameClientProps) {
@@ -116,21 +117,21 @@ export function HallOfFameClient({ initialData }: HallOfFameClientProps) {
               {/* Grandmaster (2nd) */}
               {initialData.length > 1 && (
                 <div className="order-2 md:order-1 mt-16 md:mt-24">
-                  <WinnerCard name={initialData[1].winner} rank="GRANDMASTER" delay={0.4} />
+                  <WinnerCard name={initialData[1].winner || initialData[1].name || "Unknown Winner"} rank="GRANDMASTER" delay={0.4} />
                 </div>
               )}
               
               {/* Champion (1st) */}
               {initialData.length > 0 && (
                 <div className="order-1 md:order-2">
-                  <WinnerCard name={initialData[0].winner} rank="CHAMPION" isCenter delay={0.2} />
+                  <WinnerCard name={initialData[0].winner || initialData[0].name || "Unknown Winner"} rank="CHAMPION" isCenter delay={0.2} />
                 </div>
               )}
               
               {/* Master (3rd) */}
               {initialData.length > 2 && (
-                <div className="order-3 md:order-3 mt-16 md:mt-24">
-                  <WinnerCard name={initialData[2].winner} rank="MASTER" delay={0.6} />
+                <div className="order-3 mt-16 md:mt-24">
+                  <WinnerCard name={initialData[2].winner || initialData[2].name || "Unknown Winner"} rank="MASTER" delay={0.6} />
                 </div>
               )}
             </div>

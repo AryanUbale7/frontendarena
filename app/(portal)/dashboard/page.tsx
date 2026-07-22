@@ -8,9 +8,10 @@ import { ArrowRight, Trophy, Code2, Clock, FileCode, FileText, Download, Layers,
 import Link from "next/link"
 import { getDashboardData } from "@/actions/dashboard"
 import { ProblemStatementList } from "@/components/dashboard/ProblemStatementList"
+import { DashboardData, ParticipantTrack, ProblemStatementFile } from "@/lib/types"
 
 export default function DashboardPage() {
-  const [data, setData] = React.useState({ 
+  const [data, setData] = React.useState<DashboardData>({ 
     fullName: "Loading...", 
     teamName: "", 
     submissionStatus: "Loading...",
@@ -30,8 +31,8 @@ export default function DashboardPage() {
   const [timeLeft, setTimeLeft] = React.useState("Calculating...")
 
   // Track statements state
-  const [participantTracks, setParticipantTracks] = React.useState<any[]>([])
-  const [initialStatements, setInitialStatements] = React.useState<{ [trackId: string]: any[] }>({})
+  const [participantTracks, setParticipantTracks] = React.useState<ParticipantTrack[]>([])
+  const [initialStatements, setInitialStatements] = React.useState<{ [trackId: string]: ProblemStatementFile[] }>({})
   const [loadingStatements, setLoadingStatements] = React.useState(true)
 
   React.useEffect(() => {
@@ -59,7 +60,7 @@ export default function DashboardPage() {
       const tracksList = await getParticipantTracks()
       setParticipantTracks(tracksList)
       
-      const statementsMap: { [trackId: string]: any[] } = {}
+      const statementsMap: { [trackId: string]: ProblemStatementFile[] } = {}
       await Promise.all(
         tracksList.map(async (track) => {
           const files = await getPublishedProblemStatements(track.id)

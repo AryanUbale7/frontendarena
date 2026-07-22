@@ -24,16 +24,23 @@ export function LegalPageLayout({ title, lastUpdated, sections }: LegalPageLayou
   const [activeSection, setActiveSection] = React.useState<string>(sections[0]?.id || "")
 
   React.useEffect(() => {
+    let ticking = false
     const handleScroll = () => {
-      const sectionElements = sections.map(s => document.getElementById(s.id))
-      const scrollPosition = window.scrollY + 200
+      if (!ticking) {
+        ticking = true
+        requestAnimationFrame(() => {
+          const sectionElements = sections.map(s => document.getElementById(s.id))
+          const scrollPosition = window.scrollY + 200
 
-      for (let i = sectionElements.length - 1; i >= 0; i--) {
-        const section = sectionElements[i]
-        if (section && section.offsetTop <= scrollPosition) {
-          setActiveSection(sections[i].id)
-          break
-        }
+          for (let i = sectionElements.length - 1; i >= 0; i--) {
+            const section = sectionElements[i]
+            if (section && section.offsetTop <= scrollPosition) {
+              setActiveSection(sections[i].id)
+              break
+            }
+          }
+          ticking = false
+        })
       }
     }
 

@@ -9,22 +9,22 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: "sm" | "md" | "lg" | "xl"
 }
 
+const sizes = {
+  sm: "h-8 w-8 text-xs",
+  md: "h-12 w-12 text-sm",
+  lg: "h-16 w-16 text-base",
+  xl: "h-20 w-20 text-lg",
+}
+
+// Exact image pixel widths per breakpoint for Next.js image loading optimization
+const nextImageWidths = {
+  sm: "32px",
+  md: "48px",
+  lg: "64px",
+  xl: "80px",
+}
+
 function Avatar({ className, src, alt, fallback, size = "md", ...props }: AvatarProps) {
-  const sizes = {
-    sm: "h-8 w-8 text-xs",
-    md: "h-12 w-12 text-sm",
-    lg: "h-16 w-16 text-base",
-    xl: "h-20 w-20 text-lg",
-  }
-
-  // Exact image pixel widths per breakpoint for Next.js image loading optimization
-  const nextImageWidths = {
-    sm: "32px",
-    md: "48px",
-    lg: "64px",
-    xl: "80px",
-  }
-
   return (
     <div
       className={cn(

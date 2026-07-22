@@ -6,6 +6,7 @@ import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
 import { z } from "zod"
+import crypto from "crypto"
 
 const LoginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -165,7 +166,8 @@ export async function adminLogin(formData: FormData) {
 
   if (adminUsername && adminPasskey && email === adminUsername && password === adminPasskey) {
     const cookieStore = await cookies()
-    cookieStore.set("admin_auth", "true", {
+    const hmac = crypto.createHmac('sha256', process.env.ADMIN_PASSKEY || 'fallback-secret').update('admin_authenticated').digest('hex')
+    cookieStore.set("admin_auth", hmac, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

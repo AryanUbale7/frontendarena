@@ -5,14 +5,14 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "gold" | "violet" | "outline"
 }
 
-function Badge({ className, variant = "default", ...props }: BadgeProps) {
-  const variants = {
-    default: "bg-surface-hover text-text-primary border-surface-border",
-    gold: "bg-accent-gold/10 text-accent-gold border-accent-gold/20 shadow-[0_0_10px_rgba(245,158,11,0.2)]",
-    violet: "bg-accent-violet/10 text-accent-violet border-accent-violet/20 shadow-[0_0_10px_rgba(139,92,246,0.2)]",
-    outline: "border-surface-border text-text-secondary",
-  }
+const variants = {
+  default: "bg-surface-hover text-text-primary border-surface-border",
+  gold: "bg-accent-gold/10 text-accent-gold border-accent-gold/20 shadow-[0_0_10px_rgba(245,158,11,0.2)]",
+  violet: "bg-accent-violet/10 text-accent-violet border-accent-violet/20 shadow-[0_0_10px_rgba(139,92,246,0.2)]",
+  outline: "border-surface-border text-text-secondary",
+}
 
+function Badge({ className, variant = "default", ...props }: BadgeProps) {
   return (
     <div
       className={cn(

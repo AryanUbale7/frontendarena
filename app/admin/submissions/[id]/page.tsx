@@ -7,19 +7,20 @@ import { getSubmissionById } from "@/actions/admin"
 import { Badge } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
 import { Loader2, ArrowLeft, Code2, ExternalLink, Video, Calendar, User, Mail } from "lucide-react"
+import { Submission } from "@/lib/types"
 
 export default function SubmissionDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const [data, setData] = React.useState<any>(null)
+  const [data, setData] = React.useState<Submission | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState("")
 
   React.useEffect(() => {
     if (!params.id) return
     getSubmissionById(params.id as string).then((res) => {
-      if (res.error) setError(res.error)
-      else setData(res.data)
+      if (res.error || !res.data) setError(res.error || "Submission not found")
+      else setData(res.data as unknown as Submission)
       setLoading(false)
     })
   }, [params.id])

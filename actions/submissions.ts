@@ -40,8 +40,9 @@ export async function saveDraft(formData: FormData) {
     return { error: "Submission rate limit exceeded. Please try again in an hour." }
   }
 
-  // Get active event ID (Hardcoded for demo, normally fetched from DB active event)
-  const eventId = "00000000-0000-0000-0000-000000000000"
+  // Get active event ID
+  const { data: activeEvent } = await supabase.from('events').select('id').eq('status', 'active').single()
+  const eventId = activeEvent?.id || '00000000-0000-0000-0000-000000000000'
 
   // Fetch the user's team and track registration
   const { data: memberData, error: memberErr } = await supabase
@@ -63,7 +64,8 @@ export async function saveDraft(formData: FormData) {
   }
 
   const teamId = memberData.team_id
-  const trackId = (memberData.teams as any).track_id
+  const teamsObj = memberData.teams as unknown as { track_id: string } | Array<{ track_id: string }>
+  const trackId = Array.isArray(teamsObj) ? teamsObj[0]?.track_id : teamsObj?.track_id
 
   const parsed = SubmissionSchema.safeParse({
     projectName: formData.get("projectName"),
@@ -131,7 +133,8 @@ export async function finalSubmit(formData: FormData) {
     return { error: "Submission rate limit exceeded. Please try again in an hour." }
   }
 
-  const eventId = "00000000-0000-0000-0000-000000000000"
+  const { data: activeEvent } = await supabase.from('events').select('id').eq('status', 'active').single()
+  const eventId = activeEvent?.id || '00000000-0000-0000-0000-000000000000'
 
   // Fetch the user's team and track registration
   const { data: memberData, error: memberErr } = await supabase
@@ -153,7 +156,8 @@ export async function finalSubmit(formData: FormData) {
   }
 
   const teamId = memberData.team_id
-  const trackId = (memberData.teams as any).track_id
+  const teamsObj = memberData.teams as unknown as { track_id: string } | Array<{ track_id: string }>
+  const trackId = Array.isArray(teamsObj) ? teamsObj[0]?.track_id : teamsObj?.track_id
 
   const parsed = FinalSubmitSchema.safeParse({
     projectName: formData.get("projectName"),
@@ -217,7 +221,8 @@ export async function getMySubmission() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: "Unauthorized" }
 
-  const eventId = "00000000-0000-0000-0000-000000000000"
+  const { data: activeEvent } = await supabase.from('events').select('id').eq('status', 'active').single()
+  const eventId = activeEvent?.id || '00000000-0000-0000-0000-000000000000'
 
   const { data, error } = await supabase
     .from("submissions")

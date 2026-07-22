@@ -9,9 +9,11 @@ import { RiftRing } from "@/components/signature/RiftRing"
 import { getTournamentsData } from "@/actions/public"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
+import { Event } from "@/lib/types"
 
 export default function TournamentsPage() {
-  const [data, setData] = React.useState<any[]>([])
+  React.useEffect(() => { document.title = 'Tournaments | Frontend Arena' }, [])
+  const [data, setData] = React.useState<Event[]>([])
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
@@ -102,7 +104,7 @@ export default function TournamentsPage() {
                 >
                   <div className="flex justify-between items-start mb-4">
                     <span className="text-sm font-mono text-text-muted">
-                      {new Date(event.start_date).getFullYear()}
+                      {new Date(event.start_date || new Date()).getFullYear()}
                     </span>
                     <Badge variant={event.status === 'completed' ? "default" : "gold"}>
                       {event.status}

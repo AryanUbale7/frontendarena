@@ -25,12 +25,13 @@ function LinkedinIcon(props: React.SVGProps<SVGSVGElement>) {
   )
 }
 
-function SocialIcon({ href, icon: Icon }: { href: string, icon: React.ElementType }) {
+function SocialIcon({ href, icon: Icon, "aria-label": ariaLabel }: { href: string, icon: React.ElementType, "aria-label": string }) {
   return (
     <a 
       href={href} 
       target="_blank" 
       rel="noopener noreferrer"
+      aria-label={ariaLabel}
       className="text-text-muted hover:text-accent-gold transition-colors duration-300 p-3 min-w-[44px] min-h-[44px] flex items-center justify-center"
     >
       <Icon className="w-5 h-5" />
@@ -69,25 +70,26 @@ export function Footer() {
     {
       title: "Arena",
       links: [
-        { label: "Tournaments", href: "#" },
-        { label: "Leaderboard", href: "#" },
-        { label: "Rules & Guidelines", href: "#" },
+        { label: "Tournaments", href: "/tournaments" },
+        { label: "Leaderboard", href: "/leaderboard" },
+        { label: "Rules & Guidelines", href: "/rules" },
+        { label: "Hall of Fame", href: "/hall-of-fame" },
       ]
     },
     {
       title: "Community",
       links: [
-        { label: "WhatsApp Community", href: "#" },
+        { label: "WhatsApp Community", href: "https://chat.whatsapp.com/" },
         { label: "Instagram", href: "https://www.instagram.com/frontend_arena/" },
-        { label: "Code of Conduct", href: "#" },
+        { label: "Code of Conduct", href: "/rules" },
       ]
     },
     {
       title: "Partners",
       links: [
-        { label: "Sponsor the Arena", href: "#" },
-        { label: "UptoSkills", href: "#" },
-        { label: "InterviewBuddy", href: "#" },
+        { label: "Sponsor the Arena", href: "/sponsor" },
+        { label: "UptoSkills", href: "/" },
+        { label: "InterviewBuddy", href: "/" },
       ]
     },
     {
@@ -122,8 +124,8 @@ export function Footer() {
               The ultimate battleground for frontend developers. Code, survive, and conquer your way to the top of the global leaderboard.
             </p>
             <div className="flex items-center gap-4 mt-2">
-              <SocialIcon href="https://www.instagram.com/frontend_arena/" icon={InstagramIcon} />
-              <SocialIcon href="#" icon={LinkedinIcon} />
+              <SocialIcon href="https://www.instagram.com/frontend_arena/" icon={InstagramIcon} aria-label="Instagram" />
+              <SocialIcon href="/" icon={LinkedinIcon} aria-label="LinkedIn" />
             </div>
           </div>
 

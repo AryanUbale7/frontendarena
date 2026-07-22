@@ -6,9 +6,11 @@ import { Avatar } from "@/components/ui/Avatar"
 import { Badge } from "@/components/ui/Badge"
 import { getLeaderboardData } from "@/actions/public"
 import { Loader2 } from "lucide-react"
+import { LeaderboardEntry } from "@/lib/types"
 
 export default function LeaderboardPage() {
-  const [data, setData] = React.useState<any[]>([])
+  React.useEffect(() => { document.title = 'Leaderboard | Frontend Arena' }, [])
+  const [data, setData] = React.useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
@@ -87,10 +89,10 @@ export default function LeaderboardPage() {
 
                 {/* Developer */}
                 <div className="col-span-5 flex items-center gap-4">
-                  <Avatar fallback={user.team.substring(0,2).toUpperCase()} size="sm" className="bg-background border border-surface-border" />
+                  <Avatar fallback={(user.team || user.team_name || "TM").substring(0,2).toUpperCase()} size="sm" className="bg-background border border-surface-border" />
                   <div className="flex flex-col">
-                    <span className="text-text-primary font-heading font-semibold">{user.team}</span>
-                    <span className="text-text-muted font-mono text-xs">{user.project}</span>
+                    <span className="text-text-primary font-heading font-semibold">{user.team || user.team_name || "Unknown Team"}</span>
+                    <span className="text-text-muted font-mono text-xs">{user.project || "Project"}</span>
                   </div>
                 </div>
 
@@ -103,7 +105,7 @@ export default function LeaderboardPage() {
 
                 {/* Points */}
                 <div className="col-span-3 mt-4 md:mt-0 md:text-right font-mono text-text-primary font-medium">
-                  {user.score.toLocaleString()} PTS
+                  {(user.score || 0).toLocaleString()} PTS
                 </div>
               </div>
             ))

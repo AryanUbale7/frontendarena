@@ -4,6 +4,7 @@ import * as React from "react"
 import { motion } from "framer-motion"
 import { Users, Code, Trophy, Activity, Loader2, Upload, FileText, Trash2, Eye } from "lucide-react"
 import { getAdminStats, getActiveEventContent, updateEventContent, uploadEventFile, deleteEventFile } from "@/actions/admin"
+import { AdminStats } from "@/lib/types"
 
 function StatCard({ title, value, icon: Icon, trend }: { title: string, value: string, icon: any, trend?: string }) {
   return (
@@ -20,8 +21,14 @@ function StatCard({ title, value, icon: Icon, trend }: { title: string, value: s
   )
 }
 
+type ActivityItem = {
+  users?: { full_name?: string } | Array<{ full_name?: string }> | null;
+  project_name?: string;
+  updated_at: string;
+}
+
 export default function AdminDashboard() {
-  const [data, setData] = React.useState<any>(null)
+  const [data, setData] = React.useState<AdminStats | null>(null)
   const [loading, setLoading] = React.useState(true)
 
   // Content state variables
@@ -50,8 +57,9 @@ export default function AdminDashboard() {
       getAdminStats(),
       getActiveEventContent()
     ]).then(([statsRes, contentRes]) => {
-      if (!(statsRes as any).error) {
-        setData(statsRes as any)
+      const res = statsRes as unknown as AdminStats
+      if (!res.error) {
+        setData(res)
       }
       if (contentRes && !contentRes.error && contentRes.data) {
         setProblemStatement(contentRes.data.problem_statement || "")
@@ -213,17 +221,21 @@ export default function AdminDashboard() {
             {data?.recentSubmissions?.length === 0 ? (
               <p className="text-text-muted">No recent activity found.</p>
             ) : (
-              data?.recentSubmissions?.map((activity: any, i: number) => (
-                <div key={i} className="flex items-start gap-4 pb-6 border-b border-surface-border last:border-0 last:pb-0">
-                  <div className="w-2 h-2 rounded-full bg-accent-violet mt-2" />
-                  <div>
-                    <p className="text-text-primary font-body">
-                      <span className="font-semibold text-white">{activity.users?.full_name || "Unknown"}</span> updated submission for <span className="font-mono text-accent-gold">{activity.project_name || "Draft Project"}</span>
-                    </p>
-                    <p className="text-sm text-text-muted mt-1 font-mono">{new Date(activity.updated_at).toLocaleString()}</p>
+              data?.recentSubmissions?.map((activity: ActivityItem, i: number) => {
+                const userObj = Array.isArray(activity.users) ? activity.users[0] : activity.users
+                const userFullName = userObj?.full_name || "Unknown"
+                return (
+                  <div key={i} className="flex items-start gap-4 pb-6 border-b border-surface-border last:border-0 last:pb-0">
+                    <div className="w-2 h-2 rounded-full bg-accent-violet mt-2" />
+                    <div>
+                      <p className="text-text-primary font-body">
+                        <span className="font-semibold text-white">{userFullName}</span> updated submission for <span className="font-mono text-accent-gold">{activity.project_name || "Draft Project"}</span>
+                      </p>
+                      <p className="text-sm text-text-muted mt-1 font-mono">{new Date(activity.updated_at).toLocaleString()}</p>
+                    </div>
                   </div>
-                </div>
-              ))
+                )
+              })
             )}
           </div>
         </motion.div>

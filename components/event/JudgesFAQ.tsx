@@ -7,11 +7,14 @@ import { cn } from "@/lib/utils"
 
 function FAQItem({ question, answer }: { question: string, answer: string }) {
   const [isOpen, setIsOpen] = React.useState(false)
+  const id = React.useId()
 
   return (
     <div className="border-b border-surface-border">
       <button 
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-controls={id}
         className="w-full flex items-center justify-between py-6 text-left group focus:outline-none"
       >
         <span className="text-lg font-heading font-semibold text-text-primary group-hover:text-accent-violet transition-colors">
@@ -27,6 +30,8 @@ function FAQItem({ question, answer }: { question: string, answer: string }) {
       <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div
+            id={id}
+            role="region"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}

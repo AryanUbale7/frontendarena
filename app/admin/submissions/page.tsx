@@ -9,9 +9,10 @@ import Link from "next/link"
 
 import { getAllSubmissions } from "@/actions/admin"
 import { Loader2 } from "lucide-react"
+import { AdminSubmission } from "@/lib/types"
 
 export default function SubmissionsPage() {
-  const [data, setData] = React.useState<any[]>([])
+  const [data, setData] = React.useState<AdminSubmission[]>([])
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {

@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
 import { Mail, Briefcase, Calendar, Star, MessageSquare, Loader2, Download } from "lucide-react"
 import { getAllSponsorInquiries } from "@/actions/admin"
+import { SponsorInquiry } from "@/lib/types"
 
 export default function AdminSponsorsPage() {
-  const [data, setData] = React.useState<any[]>([])
+  const [data, setData] = React.useState<SponsorInquiry[]>([])
   const [loading, setLoading] = React.useState(true)
   const [errorMsg, setErrorMsg] = React.useState("")
 
@@ -29,13 +30,13 @@ export default function AdminSponsorsPage() {
     const headers = ["ID", "Name", "Email", "Company", "Tier Interest", "Message", "Requested At"]
     
     const rows = data.map(inquiry => [
-      inquiry.id,
-      `${inquiry.first_name} ${inquiry.last_name}`,
-      inquiry.email,
-      inquiry.company,
-      inquiry.tier.toUpperCase(),
+      inquiry.id || "",
+      `${inquiry.first_name || inquiry.contact_name || ""} ${inquiry.last_name || ""}`.trim() || "Unknown",
+      inquiry.email || inquiry.contact_email || "",
+      inquiry.company || inquiry.company_name || "N/A",
+      (inquiry.tier || "General").toUpperCase(),
       inquiry.message || "",
-      new Date(inquiry.created_at).toLocaleString()
+      inquiry.created_at ? new Date(inquiry.created_at).toLocaleString() : ""
     ])
 
     const csvContent = [
@@ -116,21 +117,21 @@ export default function AdminSponsorsPage() {
                     No inquiries found.
                   </td>
                 </tr>
-              ) : data.map((inquiry) => (
-                <tr key={inquiry.id} className="hover:bg-surface-hover transition-colors">
+              ) : data.map((inquiry, idx) => (
+                <tr key={inquiry.id || idx} className="hover:bg-surface-hover transition-colors">
                   <td className="p-4 font-semibold text-text-primary">
                     <div className="flex items-center gap-2">
                       <Briefcase size={16} className="text-text-muted" />
-                      {inquiry.company}
+                      {inquiry.company || inquiry.company_name || "N/A"}
                     </div>
                   </td>
                   <td className="p-4 font-medium text-text-primary">
-                    {inquiry.first_name} {inquiry.last_name}
+                    {`${inquiry.first_name || inquiry.contact_name || ""} ${inquiry.last_name || ""}`.trim() || "Unknown"}
                   </td>
                   <td className="p-4 text-sm text-text-secondary">
-                    <a href={`mailto:${inquiry.email}`} className="flex items-center gap-2 hover:text-accent-violet transition-colors">
+                    <a href={`mailto:${inquiry.email || inquiry.contact_email}`} className="flex items-center gap-2 hover:text-accent-violet transition-colors">
                       <Mail size={14} />
-                      {inquiry.email}
+                      {inquiry.email || inquiry.contact_email || "N/A"}
                     </a>
                   </td>
                   <td className="p-4">
@@ -140,7 +141,7 @@ export default function AdminSponsorsPage() {
                       : inquiry.tier === "master" ? "outline" 
                       : "default"
                     }>
-                      {inquiry.tier.toUpperCase()}
+                      {(inquiry.tier || "General").toUpperCase()}
                     </Badge>
                   </td>
                   <td className="p-4 text-sm text-text-secondary max-w-xs truncate" title={inquiry.message}>
@@ -149,7 +150,7 @@ export default function AdminSponsorsPage() {
                   <td className="p-4 text-sm text-text-muted">
                     <div className="flex items-center gap-1.5">
                       <Calendar size={14} />
-                      {new Date(inquiry.created_at).toLocaleDateString()}
+                      {inquiry.created_at ? new Date(inquiry.created_at).toLocaleDateString() : "N/A"}
                     </div>
                   </td>
                 </tr>
@@ -172,15 +173,15 @@ export default function AdminSponsorsPage() {
             <div className="p-12 text-center text-text-muted">
               No inquiries found.
             </div>
-          ) : data.map((inquiry) => (
-            <div key={inquiry.id} className="p-5 space-y-4 hover:bg-surface-hover transition-colors">
+          ) : data.map((inquiry, idx) => (
+            <div key={inquiry.id || idx} className="p-5 space-y-4 hover:bg-surface-hover transition-colors">
               <div className="flex justify-between items-start gap-2">
                 <div>
                   <h4 className="font-semibold text-text-primary text-base flex items-center gap-1.5">
                     <Briefcase size={16} className="text-text-muted flex-shrink-0" />
-                    {inquiry.company}
+                    {inquiry.company || inquiry.company_name || "N/A"}
                   </h4>
-                  <p className="text-sm text-text-secondary mt-1">{inquiry.first_name} {inquiry.last_name}</p>
+                  <p className="text-sm text-text-secondary mt-1">{`${inquiry.first_name || inquiry.contact_name || ""} ${inquiry.last_name || ""}`.trim() || "Unknown"}</p>
                 </div>
                 <Badge variant={
                   inquiry.tier === "champion" ? "gold" 
@@ -188,7 +189,7 @@ export default function AdminSponsorsPage() {
                   : inquiry.tier === "master" ? "outline" 
                   : "default"
                 }>
-                  {inquiry.tier.toUpperCase()}
+                  {(inquiry.tier || "General").toUpperCase()}
                 </Badge>
               </div>
 
@@ -198,16 +199,15 @@ export default function AdminSponsorsPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-3 gap-2 text-xs font-mono">
-                <span className="text-text-muted">Email</span>
-                <a href={`mailto:${inquiry.email}`} className="text-accent-violet col-span-2 truncate flex items-center gap-1 hover:underline">
-                  <Mail size={12} /> {inquiry.email}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs border-t border-surface-border/50 text-text-muted">
+                <a href={`mailto:${inquiry.email || inquiry.contact_email}`} className="flex items-center gap-1.5 text-accent-violet hover:underline">
+                  <Mail size={14} />
+                  {inquiry.email || inquiry.contact_email || "N/A"}
                 </a>
-
-                <span className="text-text-muted">Date</span>
-                <span className="text-text-secondary col-span-2">
-                  {new Date(inquiry.created_at).toLocaleDateString()}
-                </span>
+                <div className="flex items-center gap-1">
+                  <Calendar size={14} />
+                  {inquiry.created_at ? new Date(inquiry.created_at).toLocaleDateString() : "N/A"}
+                </div>
               </div>
             </div>
           ))}

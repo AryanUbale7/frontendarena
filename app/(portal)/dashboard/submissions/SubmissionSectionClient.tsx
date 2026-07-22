@@ -3,16 +3,17 @@
 import * as React from "react"
 import { SubmissionForm } from "@/components/dashboard/SubmissionForm"
 import { SubmissionSubmittedCard } from "@/components/dashboard/SubmissionSubmittedCard"
+import { Submission } from "@/lib/types"
 
 interface SubmissionSectionClientProps {
   teamId: string
   trackId: string
-  initialSubmission: any
+  initialSubmission: Submission | null
   submissionsOpen: boolean
 }
 
 export function SubmissionSectionClient({ teamId, trackId, initialSubmission, submissionsOpen }: SubmissionSectionClientProps) {
-  const [submission, setSubmission] = React.useState<any>(initialSubmission)
+  const [submission, setSubmission] = React.useState<Submission | null>(initialSubmission)
 
   if (submission) {
     return <SubmissionSubmittedCard submission={submission} />

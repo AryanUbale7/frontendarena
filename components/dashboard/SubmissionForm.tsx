@@ -5,11 +5,12 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/Button"
 import { AlertCircle, Loader2, AlertTriangle } from "lucide-react"
 import { createSubmission } from "@/app/dashboard/submissions/actions"
+import { Submission } from "@/lib/types"
 
 interface SubmissionFormProps {
   teamId: string
   trackId: string
-  onSuccess: (submission: any) => void
+  onSuccess: (submission: Submission) => void
 }
 
 export function SubmissionForm({ teamId, trackId, onSuccess }: SubmissionFormProps) {
@@ -28,9 +29,9 @@ export function SubmissionForm({ teamId, trackId, onSuccess }: SubmissionFormPro
     const result = await createSubmission(teamId, trackId, formData)
     
     if (result.success) {
-      onSuccess(result.submission)
+      onSuccess(result.submission as unknown as Submission)
     } else if (result.reason === "already_submitted") {
-      onSuccess(result.existingSubmission)
+      onSuccess(result.existingSubmission as unknown as Submission)
     } else {
       setErrorMsg(result.error || "Failed to submit. Please try again.")
       setLoading(false)
@@ -276,7 +277,7 @@ export function SubmissionForm({ teamId, trackId, onSuccess }: SubmissionFormPro
       {/* Confirmation Dialog Overlay */}
       {showConfirmDialog && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-surface border border-surface-border rounded-xl p-6 max-w-md w-full shadow-2xl relative">
+          <div className="bg-surface border border-surface-border rounded-xl p-6 max-w-md w-full shadow-2xl relative" role="dialog" aria-modal="true">
             <div className="absolute -top-1 -left-1 w-3 h-3 border-t-[2px] border-l-[2px] border-accent-gold/40" />
             <div className="absolute -top-1 -right-1 w-3 h-3 border-t-[2px] border-r-[2px] border-accent-gold/40" />
 

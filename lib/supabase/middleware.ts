@@ -1,6 +1,25 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+async function getExpectedHmac(secret: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const keyData = encoder.encode(secret)
+  const messageData = encoder.encode('admin_authenticated')
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+  
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData)
+  return Array.from(new Uint8Array(signature))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -15,7 +34,8 @@ export async function updateSession(request: NextRequest) {
   // 1. Admin Routes protection (using custom hardcoded auth cookie) - Bypass Supabase calls entirely
   if (isAdminRoute && !isAdminLoginRoute) {
     const adminAuthCookie = request.cookies.get('admin_auth')
-    if (!adminAuthCookie || adminAuthCookie.value !== 'true') {
+    const expectedHmac = await getExpectedHmac(process.env.ADMIN_PASSKEY || 'fallback-secret')
+    if (!adminAuthCookie || adminAuthCookie.value !== expectedHmac) {
       const url = request.nextUrl.clone()
       url.pathname = '/admin/login'
       return NextResponse.redirect(url)
@@ -26,7 +46,8 @@ export async function updateSession(request: NextRequest) {
   // 2. Admin Login page redirection - Bypass Supabase calls entirely
   if (isAdminLoginRoute) {
     const adminAuthCookie = request.cookies.get('admin_auth')
-    if (adminAuthCookie && adminAuthCookie.value === 'true') {
+    const expectedHmac = await getExpectedHmac(process.env.ADMIN_PASSKEY || 'fallback-secret')
+    if (adminAuthCookie && adminAuthCookie.value === expectedHmac) {
       const url = request.nextUrl.clone()
       url.pathname = '/admin'
       return NextResponse.redirect(url)

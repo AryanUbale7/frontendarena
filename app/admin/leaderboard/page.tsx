@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
 import { Search, Plus, Edit2, Trash2, Loader2 } from "lucide-react"
 import { getLeaderboardData } from "@/actions/public"
+import { LeaderboardEntry } from "@/lib/types"
 
 export default function LeaderboardAdminPage() {
-  const [data, setData] = React.useState<any[]>([])
+  const [data, setData] = React.useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
@@ -78,12 +79,12 @@ export default function LeaderboardAdminPage() {
               ) : data.map((entry, index) => (
                 <tr key={index} className="hover:bg-surface-hover transition-colors">
                   <td className="p-4 font-mono font-bold text-center text-text-primary">
-                    #{entry.rank}
+                    #{(entry.rank || index + 1)}
                   </td>
-                  <td className="p-4 font-medium text-text-primary">{entry.team}</td>
+                  <td className="p-4 font-medium text-text-primary">{entry.team || entry.team_name || "Unknown Team"}</td>
                   <td className="p-4">
-                    <Badge variant={entry.rank === 1 ? "gold" : entry.rank <= 3 ? "violet" : "default"}>
-                      {entry.rank === 1 ? "Champion" : entry.rank <= 3 ? "Grandmaster" : "Master"}
+                    <Badge variant={(entry.rank || index + 1) === 1 ? "gold" : (entry.rank || index + 1) <= 3 ? "violet" : "default"}>
+                      {(entry.rank || index + 1) === 1 ? "Champion" : (entry.rank || index + 1) <= 3 ? "Grandmaster" : "Master"}
                     </Badge>
                   </td>
                   <td className="p-4 font-mono text-accent-gold text-right">{entry.score}</td>

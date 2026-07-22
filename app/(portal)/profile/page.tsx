@@ -4,7 +4,7 @@ import * as React from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/Button"
 import { User, Mail, Calendar, Shield, Save, Loader2, CheckCircle2, XCircle } from "lucide-react"
-import { getUserProfile } from "@/actions/dashboard"
+import { getUserProfile, updateProfile } from "@/actions/dashboard"
 import { updateUserPassword } from "@/actions/auth"
 
 export default function ProfilePage() {
@@ -26,14 +26,18 @@ export default function ProfilePage() {
     })
   }, [])
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
+    const formData = new FormData(e.target as HTMLFormElement)
+    const fullName = formData.get("fullName") as string
+    
+    const res = await updateProfile(fullName)
+    setLoading(false)
+    if (res && !res.error) {
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
-    }, 1000)
+    }
   }
 
   return (
@@ -104,7 +108,7 @@ export default function ProfilePage() {
                   <label className="text-sm font-mono text-text-muted uppercase tracking-wider">Full Name</label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
-                    <input type="text" defaultValue={profile?.fullName} disabled={loadingProfile} className="w-full bg-background border border-surface-border rounded-lg pl-10 pr-4 py-3 text-text-primary focus:outline-none focus:border-accent-violet transition-colors" />
+                    <input name="fullName" type="text" defaultValue={profile?.fullName} disabled={loadingProfile} className="w-full bg-background border border-surface-border rounded-lg pl-10 pr-4 py-3 text-text-primary focus:outline-none focus:border-accent-violet transition-colors" />
                   </div>
                 </div>
 
