@@ -8,7 +8,8 @@ import {
   publishProblemStatement, 
   unpublishProblemStatement, 
   deleteProblemStatement,
-  createTrack
+  createTrack,
+  deleteTrack
 } from "@/app/admin/problem-statements/actions"
 import { Loader2, Trash2, Eye, Send, RotateCcw, AlertTriangle, Layers, Calendar, HardDrive, Plus } from "lucide-react"
 
@@ -29,12 +30,15 @@ export function ProblemStatementsScreen() {
   const [loadingTracks, setLoadingTracks] = React.useState(true)
   const [loadingStatements, setLoadingStatements] = React.useState(false)
 
-  // Track creator states
+  // Track creator and deleter states
   const [showCreateForm, setShowCreateForm] = React.useState(false)
   const [trackName, setTrackName] = React.useState("")
   const [trackDescription, setTrackDescription] = React.useState("")
   const [creatingTrack, setCreatingTrack] = React.useState(false)
   const [trackCreateError, setTrackCreateError] = React.useState("")
+
+  const [confirmDeleteTrackId, setConfirmDeleteTrackId] = React.useState<string | null>(null)
+  const [deletingTrack, setDeletingTrack] = React.useState(false)
 
   // Dialog and action states
   const [confirmPublishId, setConfirmPublishId] = React.useState<string | null>(null)
@@ -43,15 +47,21 @@ export function ProblemStatementsScreen() {
   const [deletingId, setDeletingId] = React.useState<string | null>(null)
   const [actionError, setActionError] = React.useState("")
 
-  React.useEffect(() => {
-    getTracks().then((res) => {
-      setTracks(res)
-      if (res.length > 0) {
-        setSelectedTrackId(res[0].id)
-      }
-      setLoadingTracks(false)
-    })
+  const loadTracks = React.useCallback(async () => {
+    setLoadingTracks(true)
+    const res = await getTracks()
+    setTracks(res)
+    if (res.length > 0) {
+      setSelectedTrackId(res[0].id)
+    } else {
+      setSelectedTrackId("")
+    }
+    setLoadingTracks(false)
   }, [])
+
+  React.useEffect(() => {
+    loadTracks()
+  }, [loadTracks])
 
   const loadStatements = React.useCallback(async (trackId: string) => {
     if (!trackId) return
@@ -143,6 +153,22 @@ export function ProblemStatementsScreen() {
     }
   }
 
+  const handleConfirmDeleteTrack = async () => {
+    if (!confirmDeleteTrackId) return
+    setDeletingTrack(true)
+    setActionError("")
+
+    const res = await deleteTrack(confirmDeleteTrackId)
+    setDeletingTrack(false)
+
+    if (res.error) {
+      setActionError(res.error)
+    } else {
+      setConfirmDeleteTrackId(null)
+      loadTracks()
+    }
+  }
+
   if (loadingTracks) {
     return (
       <div className="w-full h-[60vh] flex items-center justify-center">
@@ -168,17 +194,27 @@ export function ProblemStatementsScreen() {
             <Layers size={18} className="text-accent-violet flex-shrink-0" />
             <span className="font-mono text-xs text-text-muted uppercase">Selected Track:</span>
             {tracks.length > 0 ? (
-              <select
-                value={selectedTrackId}
-                onChange={(e) => setSelectedTrackId(e.target.value)}
-                className="bg-surface border border-surface-border rounded-lg px-4 py-2.5 text-text-primary text-sm font-mono focus:border-accent-violet focus:outline-none"
-              >
-                {tracks.map((track) => (
-                  <option key={track.id} value={track.id}>
-                    {track.name}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedTrackId}
+                  onChange={(e) => setSelectedTrackId(e.target.value)}
+                  className="bg-surface border border-surface-border rounded-lg px-4 py-2.5 text-text-primary text-sm font-mono focus:border-accent-violet focus:outline-none"
+                >
+                  {tracks.map((track) => (
+                    <option key={track.id} value={track.id}>
+                      {track.name}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  onClick={() => setConfirmDeleteTrackId(selectedTrackId)}
+                  title="Delete Selected Track"
+                  className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors flex items-center justify-center"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             ) : (
               <span className="text-xs text-text-muted italic mr-2">No tracks</span>
             )}
@@ -442,6 +478,42 @@ export function ProblemStatementsScreen() {
                 <p className="text-red-400 text-xs font-mono mt-2">{trackCreateError}</p>
               )}
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Track Confirmation Modal */}
+      {confirmDeleteTrackId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div role="dialog" aria-modal="true" className="bg-surface border border-surface-border rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-red-400">
+              <AlertTriangle size={24} />
+              <h3 className="text-lg font-heading font-bold text-text-primary">Delete Track</h3>
+            </div>
+            
+            <p className="text-sm text-text-secondary leading-relaxed font-body">
+              Are you sure you want to delete track <span className="font-mono text-white font-bold">{tracks.find(t => t.id === confirmDeleteTrackId)?.name}</span>? 
+              This will also permanently delete all associated problem statements and file downloads.
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteTrackId(null)}
+                className="px-4 py-2 rounded-lg bg-surface-hover border border-surface-border text-text-secondary hover:text-white transition-colors text-sm font-mono"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteTrack}
+                disabled={deletingTrack}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white font-bold hover:bg-red-500 transition-colors text-sm font-mono flex items-center gap-2"
+              >
+                {deletingTrack ? <Loader2 size={14} className="animate-spin" /> : null}
+                Delete Track
+              </button>
+            </div>
           </div>
         </div>
       )}

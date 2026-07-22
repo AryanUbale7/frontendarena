@@ -336,3 +336,47 @@ export async function createTrack(formData: { name: string; description?: string
   revalidatePath("/admin/problem-statements")
   return { success: true, data }
 }
+
+export async function deleteTrack(trackId: string) {
+  try {
+    await verifyAdminAccess()
+  } catch (e: any) {
+    return { error: e.message }
+  }
+
+  const ip = await getClientIp()
+  const limitCheck = await checkRateLimit(`rate_limit:ip:${ip}:admin_mutations`, 20, 600)
+  if (!limitCheck.allowed) return { error: "Rate limit exceeded" }
+
+  const supabase = await createClient()
+
+  // 1. Delete associated problem statements from database & storage
+  const { data: statements } = await supabase
+    .from("problem_statements")
+    .select("file_url")
+    .eq("track_id", trackId)
+
+  if (statements && statements.length > 0) {
+    const filePaths = statements.map(s => s.file_url)
+    await supabase.storage.from("problem-statements").remove(filePaths)
+    await supabase.from("problem_statements").delete().eq("track_id", trackId)
+  }
+
+  // 2. Delete track row
+  const { error } = await supabase
+    .from("tracks")
+    .delete()
+    .eq("id", trackId)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidateTag("homepage-data")
+  revalidateTag("event-detail")
+  revalidatePath("/dashboard")
+  revalidatePath("/admin/problem-statements")
+
+  return { success: true }
+}
+
