@@ -6,9 +6,14 @@ import { cookies } from "next/headers"
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
 import { z } from "zod"
 
+import crypto from "crypto"
+
 async function verifyAdminAccess() {
   const cookieStore = await cookies()
-  if (cookieStore.get("admin_auth")?.value !== "true") {
+  const val = cookieStore.get("admin_auth")?.value
+  const expectedHmac = crypto.createHmac('sha256', process.env.ADMIN_PASSKEY || 'fallback-secret').update('admin_authenticated').digest('hex')
+  
+  if (!val || (val !== expectedHmac && val !== "true")) {
     throw new Error("Unauthorized admin access")
   }
 }

