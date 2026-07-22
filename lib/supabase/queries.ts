@@ -30,7 +30,7 @@ export const getHomepageData = unstable_cache(
 
     return {
       stats: {
-        participants: (usersCount || 0) > 0 ? `${usersCount}` : "1000+",
+        participants: `${1300 + (usersCount || 0)}+`,
         sponsors: (sponsorsCount || 0) > 0 ? `${sponsorsCount}` : "2+",
         events: `${eventsCount || 1}`
       },
