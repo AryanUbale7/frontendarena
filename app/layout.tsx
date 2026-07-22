@@ -1,11 +1,5 @@
 import type { Metadata } from 'next';
 import { jetbrainsMono, clashDisplay, generalSans } from '@/lib/fonts';
-import { Cinzel } from 'next/font/google';
-
-const cinzel = Cinzel({
-  subsets: ['latin'],
-  variable: '--font-cinzel',
-});
 import { GrainOverlay } from '@/components/layout/GrainOverlay';
 import './globals.css';
 
@@ -15,11 +9,11 @@ export const metadata: Metadata = {
     template: '%s | Frontend Arena',
   },
   description: 'The ultimate battleground for frontend developers.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://frontendarena.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://frontendarena.online'),
   openGraph: {
     title: 'Frontend Arena',
     description: 'The ultimate battleground for frontend developers.',
-    url: 'https://frontendarena.com',
+    url: 'https://frontendarena.online',
     siteName: 'Frontend Arena',
     locale: 'en_US',
     type: 'website',
@@ -39,6 +33,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        {/* Preconnect to speed up Supabase and font requests */}
+        <link rel="preconnect" href="https://tmdoeuoiknrciwcguhga.supabase.co" />
+        <link rel="dns-prefetch" href="https://tmdoeuoiknrciwcguhga.supabase.co" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -46,8 +45,8 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Organization",
               "name": "Frontend Arena",
-              "url": "https://frontendarena.com",
-              "logo": "https://frontendarena.com/next.svg",
+              "url": "https://frontendarena.online",
+              "logo": "https://frontendarena.online/next.svg",
               "sameAs": [
                 "https://twitter.com/frontendarena",
                 "https://github.com/frontendarena"
@@ -57,7 +56,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${jetbrainsMono.variable} ${clashDisplay.variable} ${generalSans.variable} ${cinzel.variable} antialiased min-h-screen bg-background text-text-primary selection:bg-accent-violet selection:text-white`}
+        className={`${jetbrainsMono.variable} ${clashDisplay.variable} ${generalSans.variable} antialiased min-h-screen bg-background text-text-primary selection:bg-accent-violet selection:text-white`}
       >
         <GrainOverlay />
         <div className="flex flex-col min-h-screen relative">
