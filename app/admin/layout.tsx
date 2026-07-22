@@ -4,11 +4,12 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Users, Trophy, Inbox, LogOut, Briefcase, Menu, X, FileText } from "lucide-react"
+import { LayoutDashboard, Users, Trophy, Inbox, LogOut, Briefcase, Menu, X, FileText, UserCheck } from "lucide-react"
 import { adminLogout } from "@/actions/auth"
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/approved-participants", label: "Approved Emails", icon: UserCheck },
   { href: "/admin/submissions", label: "Submissions", icon: Inbox },
   { href: "/admin/leaderboard", label: "Leaderboard", icon: Trophy },
   { href: "/admin/participants", label: "Participants", icon: Users },

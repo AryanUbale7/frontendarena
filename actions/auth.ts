@@ -85,9 +85,54 @@ export async function signup(formData: FormData) {
     return { error: parsed.error.issues[0].message }
   }
   const { email, password, fullName, teamName } = parsed.data
+  const normalizedEmail = email.trim().toLowerCase()
 
+  // 1. Whitelist Check: Check if email exists in approved_participants table
+  const { data: approvedParticipant, error: approvedErr } = await supabase
+    .from("approved_participants")
+    .select("id, email, registered")
+    .ilike("email", normalizedEmail)
+    .maybeSingle()
+
+  if (approvedErr) {
+    console.error("Error checking approved_participants:", approvedErr.message)
+  }
+
+  if (!approvedParticipant) {
+    return { 
+      error: "This email is not registered for Frontend Wars 2026. Please use the same email address that you used while registering on Unstop." 
+    }
+  }
+
+  // 2. Already Registered Check: Check if account has already been created
+  if (approvedParticipant.registered) {
+    return { 
+      error: "An account with this email already exists. Please sign in instead." 
+    }
+  }
+
+  // Double check if user already registered in users table
+  const { data: existingUser } = await supabase
+    .from("users")
+    .select("id")
+    .ilike("email", normalizedEmail)
+    .maybeSingle()
+
+  if (existingUser) {
+    // Sync registered status in approved_participants table if missing
+    await supabase
+      .from("approved_participants")
+      .update({ registered: true, registered_at: new Date().toISOString() })
+      .ilike("email", normalizedEmail)
+
+    return { 
+      error: "An account with this email already exists. Please sign in instead." 
+    }
+  }
+
+  // 3. Create Supabase Auth User
   const { data, error } = await supabase.auth.signUp({
-    email,
+    email: normalizedEmail,
     password,
     options: {
       data: {
@@ -98,11 +143,21 @@ export async function signup(formData: FormData) {
   })
 
   if (error) {
+    if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already exists")) {
+      return { error: "An account with this email already exists. Please sign in instead." }
+    }
     return { error: error.message }
   }
 
-  // If you require email confirmation, redirect to a check-email page
-  // For hackathons, if auto-confirm is on:
+  // 4. Mark Approved Participant as Registered = True
+  await supabase
+    .from("approved_participants")
+    .update({ 
+      registered: true, 
+      registered_at: new Date().toISOString() 
+    })
+    .ilike("email", normalizedEmail)
+
   revalidatePath("/", "layout")
   redirect("/dashboard")
 }

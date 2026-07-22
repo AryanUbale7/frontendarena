@@ -377,5 +377,170 @@ export async function deleteEventFile(fileType: "problem" | "resource") {
   return { success: true }
 }
 
+/**
+ * Upload approved participant emails (from CSV or Excel) into approved_participants table
+ */
+export async function uploadApprovedParticipants(emails: string[], mode: 'replace' | 'update' = 'update') {
+  try {
+    await verifyAdminAccess()
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : "Unauthorized admin access" }
+  }
+
+  const ip = await getClientIp()
+  const limitCheck = await checkRateLimit(`rate_limit:ip:${ip}:admin_mutations`, 20, 600)
+  if (!limitCheck.allowed) return { error: "Rate limit exceeded" }
+
+  if (!emails || emails.length === 0) {
+    return { error: "No valid email addresses provided." }
+  }
+
+  const supabase = await createClient()
+
+  // Clean and deduplicate emails
+  const cleanEmails = Array.from(
+    new Set(
+      emails
+        .map(e => (typeof e === "string" ? e.trim().toLowerCase() : ""))
+        .filter(e => e && e.includes("@") && e.includes("."))
+    )
+  )
+
+  if (cleanEmails.length === 0) {
+    return { error: "No valid email addresses found in the provided list." }
+  }
+
+  if (mode === "replace") {
+    // Delete non-registered entries first
+    const { error: delErr } = await supabase
+      .from("approved_participants")
+      .delete()
+      .eq("registered", false)
+
+    if (delErr) {
+      console.error("Error clearing non-registered entries:", delErr.message)
+    }
+  }
+
+  // Batch insert emails in chunks of 500
+  const chunkSize = 500
+  let insertedCount = 0
+
+  for (let i = 0; i < cleanEmails.length; i += chunkSize) {
+    const chunk = cleanEmails.slice(i, i + chunkSize).map(email => ({
+      email,
+      registered: false
+    }))
+
+    const { data, error } = await supabase
+      .from("approved_participants")
+      .upsert(chunk, { onConflict: "email", ignoreDuplicates: true })
+      .select()
+
+    if (!error && data) {
+      insertedCount += data.length
+    }
+  }
+
+  // Cross-reference existing registered users in the users table to mark them as registered = true
+  const { data: existingUsers } = await supabase
+    .from("users")
+    .select("email")
+
+  if (existingUsers && existingUsers.length > 0) {
+    const registeredEmails = existingUsers.map(u => u.email?.toLowerCase()).filter(Boolean) as string[]
+    if (registeredEmails.length > 0) {
+      await supabase
+        .from("approved_participants")
+        .update({ registered: true })
+        .in("email", registeredEmails)
+    }
+  }
+
+  revalidatePath("/admin/approved-participants")
+  revalidatePath("/admin")
+
+  return { success: true, count: cleanEmails.length }
+}
+
+/**
+ * Get statistics for approved participants whitelist
+ */
+export async function getApprovedParticipantStats() {
+  const supabase = await createClient()
+
+  const { count: totalApproved, error: err1 } = await supabase
+    .from("approved_participants")
+    .select("*", { count: "exact", head: true })
+
+  if (err1) console.error("Error fetching total approved:", err1.message)
+
+  const { count: totalRegistered, error: err2 } = await supabase
+    .from("approved_participants")
+    .select("*", { count: "exact", head: true })
+    .eq("registered", true)
+
+  if (err2) console.error("Error fetching total registered:", err2.message)
+
+  return {
+    totalApproved: totalApproved || 0,
+    totalRegistered: totalRegistered || 0,
+    remaining: (totalApproved || 0) - (totalRegistered || 0)
+  }
+}
+
+/**
+ * Get paginated list of approved participants with optional search
+ */
+export async function getApprovedParticipantsList(page: number = 1, limit: number = 50, search: string = "") {
+  const supabase = await createClient()
+  
+  let query = supabase
+    .from("approved_participants")
+    .select("id, email, registered, registered_at, created_at", { count: "exact" })
+
+  if (search && search.trim()) {
+    query = query.ilike("email", `%${search.trim().toLowerCase()}%`)
+  }
+
+  const from = (page - 1) * limit
+  const to = from + limit - 1
+
+  const { data, count, error } = await query
+    .order("created_at", { ascending: false })
+    .range(from, to)
+
+  if (error) {
+    return { error: error.message, data: [], count: 0 }
+  }
+
+  return { data: data || [], count: count || 0 }
+}
+
+/**
+ * Delete a single approved participant email from the whitelist
+ */
+export async function deleteApprovedParticipant(id: string) {
+  try {
+    await verifyAdminAccess()
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : "Unauthorized admin access" }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("approved_participants")
+    .delete()
+    .eq("id", id)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath("/admin/approved-participants")
+  return { success: true }
+}
+
+
 
 

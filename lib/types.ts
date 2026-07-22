@@ -215,3 +215,13 @@ export interface HallOfFameWinner {
   year?: string;
 }
 
+/** Represents an approved participant whitelisted from Unstop */
+export interface ApprovedParticipant {
+  id: string;
+  email: string;
+  registered: boolean;
+  registered_at?: string | null;
+  created_at: string;
+}
+
+
