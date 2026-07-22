@@ -10,14 +10,20 @@ import Link from "next/link"
 
 export function Hero() {
   const { scrollY } = useScroll()
+  const [videoLoaded, setVideoLoaded] = React.useState(false)
+  const [videoError, setVideoError] = React.useState(false)
   
+  // Try external video URL first (set this after uploading to Cloudinary/Drive)
+  // For now, try local file — it will fail on Vercel (>4.5MB) and fallback to gradient
+  const videoSrc = process.env.NEXT_PUBLIC_HERO_VIDEO_URL || "/warrior.mp4"
+
   // Staggered fade-up for subline and CTA
   const contentVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut", delay: 0.8 } // Occurs after headline
+      transition: { duration: 0.6, ease: "easeOut", delay: 0.8 }
     }
   }
 
@@ -42,25 +48,41 @@ export function Hero() {
   return (
     <section className="relative min-h-[100svh] w-full pt-32 pb-16 px-6 md:px-12 lg:px-24 flex items-center justify-center overflow-hidden">
       
-      {/* Background Video */}
+      {/* Animated Gradient Background (always visible as base) */}
       <div className="absolute inset-0 z-0">
-        <video 
-          autoPlay 
-          loop 
-          muted 
-          playsInline
-          className="w-full h-full object-cover opacity-50 mix-blend-screen"
-        >
-          <source src="/warrior.mp4" type="video/mp4" />
-        </video>
-        {/* Radial vignette for cinematic framing & text readability */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_#060608_100%)] opacity-90" />
-        {/* Bottom gradient to fade into next section */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent h-1/3 top-auto bottom-0" />
+        <div 
+          className="absolute inset-0 animate-pulse"
+          style={{
+            background: 'radial-gradient(ellipse at 30% 40%, rgba(139, 92, 246, 0.08) 0%, transparent 60%), radial-gradient(ellipse at 70% 60%, rgba(245, 158, 11, 0.06) 0%, transparent 50%), #060608',
+          }}
+        />
       </div>
 
+      {/* Background Video — loads on top of gradient */}
+      {!videoError && (
+        <div className={`absolute inset-0 z-0 transition-opacity duration-1000 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}>
+          <video 
+            autoPlay 
+            loop 
+            muted 
+            playsInline
+            preload="auto"
+            onCanPlayThrough={() => setVideoLoaded(true)}
+            onError={() => setVideoError(true)}
+            className="w-full h-full object-cover opacity-50 mix-blend-screen"
+          >
+            <source src={videoSrc} type="video/mp4" />
+          </video>
+        </div>
+      )}
+
+      {/* Radial vignette for cinematic framing & text readability */}
+      <div className="absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_center,_transparent_0%,_#060608_100%)] opacity-90" />
+      {/* Bottom gradient to fade into next section */}
+      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-background to-transparent h-1/3 top-auto bottom-0" />
+
       {/* Massive Background Ring (Halo) */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20 z-0 pointer-events-none scale-150 sm:scale-100">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20 z-[2] pointer-events-none scale-150 sm:scale-100">
         <RiftRing 
           variant="gold" 
           interactive={false} 
