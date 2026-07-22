@@ -153,13 +153,83 @@ export async function getAllParticipants() {
 
   const mapped = data.map((user: { id: string; team_name: string | null; full_name: string | null; email: string | null; created_at: string; role: string }) => ({
     id: user.id.split('-')[0].toUpperCase(),
+    fullId: user.id,
     name: user.team_name || user.full_name || "Unknown",
     email: user.email || "No email stored",
     joined: new Date(user.created_at).toLocaleDateString(),
-    status: user.role === 'admin' ? "Admin" : "Active"
+    status: user.role === 'admin' ? "Admin" : user.role === 'blocked' ? "Blocked" : "Active"
   }))
 
   return { data: mapped }
+}
+
+/**
+ * Delete a participant user from the system and clean up their whitelist status
+ */
+export async function deleteParticipant(userId: string, email?: string) {
+  try {
+    await verifyAdminAccess()
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : "Unauthorized admin access" }
+  }
+
+  const ip = await getClientIp()
+  const limitCheck = await checkRateLimit(`rate_limit:ip:${ip}:admin_mutations`, 20, 600)
+  if (!limitCheck.allowed) return { error: "Rate limit exceeded" }
+
+  const supabase = await createClient()
+
+  // 1. Delete user from public.users table
+  const { error: delErr } = await supabase
+    .from("users")
+    .delete()
+    .eq("id", userId)
+
+  if (delErr) {
+    return { error: delErr.message }
+  }
+
+  // 2. If email provided, un-register in approved_participants whitelist
+  if (email && email !== "No email stored") {
+    await supabase
+      .from("approved_participants")
+      .update({ registered: false, registered_at: null })
+      .ilike("email", email.trim().toLowerCase())
+  }
+
+  revalidatePath("/admin/participants")
+  revalidatePath("/admin")
+  return { success: true }
+}
+
+/**
+ * Block or Unblock a participant
+ */
+export async function toggleBlockParticipant(userId: string, currentStatus: string) {
+  try {
+    await verifyAdminAccess()
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : "Unauthorized admin access" }
+  }
+
+  const ip = await getClientIp()
+  const limitCheck = await checkRateLimit(`rate_limit:ip:${ip}:admin_mutations`, 20, 600)
+  if (!limitCheck.allowed) return { error: "Rate limit exceeded" }
+
+  const supabase = await createClient()
+  const newRole = currentStatus === "Blocked" ? "user" : "blocked"
+
+  const { error } = await supabase
+    .from("users")
+    .update({ role: newRole })
+    .eq("id", userId)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath("/admin/participants")
+  return { success: true, newStatus: newRole === "blocked" ? "Blocked" : "Active" }
 }
 
 export async function getAllSponsorInquiries() {

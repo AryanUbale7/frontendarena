@@ -115,7 +115,8 @@ export interface AdminSubmission {
 
 /** Represents participant data specifically transformed for admin views */
 export interface AdminParticipant { 
-  id: string; 
+  id: string;
+  fullId: string;
   name: string; 
   email: string; 
   joined: string; 
