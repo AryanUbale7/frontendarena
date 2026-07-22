@@ -134,7 +134,7 @@ export function Hero() {
         animate="visible"
       >
         <div className="flex flex-col items-start bg-background/40 backdrop-blur-md border border-surface-border p-4 rounded-lg shadow-xl">
-          <DataRail label="ACTIVE CONTENDERS" value="12,403" trend="up" />
+          <DataRail label="ACTIVE CONTENDERS" value="1,300+" trend="up" />
         </div>
       </motion.div>
       

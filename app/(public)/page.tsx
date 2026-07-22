@@ -15,7 +15,7 @@ import { CommunityCTA } from "@/components/community/CommunityCTA"
 import { getHomepageData } from "@/lib/supabase/queries"
 import { Metadata } from "next"
 
-export const revalidate = 300
+export const revalidate = 0
 
 export const metadata: Metadata = {
   title: "Home",
