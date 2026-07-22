@@ -22,6 +22,11 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Frontend Arena',
     description: 'The ultimate battleground for frontend developers.',
+  },
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
   }
 };
 
