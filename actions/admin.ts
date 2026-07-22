@@ -179,17 +179,24 @@ export async function deleteParticipant(userId: string, email?: string) {
 
   const supabase = await createClient()
 
-  // 1. Delete user from public.users table
+  // 1. Delete user submissions
+  await supabase.from("submissions").delete().eq("participant_id", userId)
+
+  // 2. Delete user team memberships
+  await supabase.from("team_members").delete().eq("user_id", userId)
+
+  // 3. Delete user profile from public.users table
   const { error: delErr } = await supabase
     .from("users")
     .delete()
     .eq("id", userId)
 
   if (delErr) {
+    console.error("Error deleting from users:", delErr.message)
     return { error: delErr.message }
   }
 
-  // 2. If email provided, un-register in approved_participants whitelist
+  // 4. Reset or remove whitelist status in approved_participants
   if (email && email !== "No email stored") {
     await supabase
       .from("approved_participants")
@@ -198,6 +205,7 @@ export async function deleteParticipant(userId: string, email?: string) {
   }
 
   revalidatePath("/admin/participants")
+  revalidatePath("/admin/approved-participants")
   revalidatePath("/admin")
   return { success: true }
 }

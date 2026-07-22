@@ -39,8 +39,6 @@ export async function login(formData: FormData) {
 
   const supabase = await createClient()
   
-  // Note: The UI calls this "Team Name", but we'll use it as the email for auth purposes 
-  // or we need to extract an email. Assuming the input name is 'email'
   const emailRaw = formData.get("email") as string
   const passwordRaw = formData.get("password") as string
 
@@ -50,13 +48,27 @@ export async function login(formData: FormData) {
   }
   const { email, password } = parsed.data
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data: authData, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
 
   if (error) {
     return { error: error.message }
+  }
+
+  // Check if participant has been blocked by admin
+  if (authData?.user) {
+    const { data: userProfile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", authData.user.id)
+      .single()
+
+    if (userProfile?.role === "blocked") {
+      await supabase.auth.signOut()
+      return { error: "Your account has been blocked by the Frontend Arena Admin. Access denied." }
+    }
   }
 
   revalidatePath("/", "layout")
